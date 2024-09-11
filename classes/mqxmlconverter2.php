@@ -65,45 +65,64 @@ class mqxmlconverter2 extends mqxmlconverter
         
         foreach ($xml->body->div->table as $table) {
 
-            $questionText = (string)$table->thead->tr->th[0]->p;
-            $questionContent = (string)$table->thead->tr->th[1]->p;
-            $answersContent = $table->tbody->tr;
-            $answerLenght = (int)count($answersContent);
-            $answerText = (string)$answersContent[count($answersContent) - 1]->td->p;
+            $rowContent = $table->tbody->tr;
+            $rowLenght = (int)count($rowContent);
 
-            $xmlString .= '<question type="category"><category><text>$course$/</text></category></question><question type="multichoice">' . PHP_EOL;
-            $xmlString .= '<name><text>' . htmlspecialchars(trim($questionText)) . '</text></name>' . PHP_EOL;
-            $xmlString .= '<questiontext format="html"><text><![CDATA[' . $questionContent . ']]></text></questiontext>' . PHP_EOL;
-            $xmlString .= '<generalfeedback format="html"><text/></generalfeedback>' . PHP_EOL;
-            $xmlString .= '<defaultgrade>1.0000000</defaultgrade>' . PHP_EOL;
-            $xmlString .= '<penalty>0.3333333</penalty>' . PHP_EOL;
-            $xmlString .= '<hidden>0</hidden>' . PHP_EOL;
-            $xmlString .= '<idnumber/>' . PHP_EOL;
-            $xmlString .= '<single>true</single>' . PHP_EOL;
-            $xmlString .= '<shuffleanswers>true</shuffleanswers>' . PHP_EOL;
-            $xmlString .= '<answernumbering>ABCD</answernumbering>' . PHP_EOL;
-            $xmlString .= '<correctfeedback format="html"><text><![CDATA[<p>Câu trả lời của bạn đúng</p>]]></text></correctfeedback>' . PHP_EOL;
-            $xmlString .= '<partiallycorrectfeedback format="html"><text/></partiallycorrectfeedback>' . PHP_EOL;
-            $xmlString .= '<incorrectfeedback format="html"><text><![CDATA[<p>Câu trả lời của bạn sai.</p>]]></text></incorrectfeedback>' . PHP_EOL;
-    
-            $answers = ['A', 'B', 'C', 'D'];
+            for ($j = 0; $j < $rowLenght / 6; $j++) {
 
-            $correctAnswer = (string)$answersContent[$answerLenght - 1]->td[1]->p;
+                $rows = [];
+                for ($idx = 0; $idx < 6; $idx++) {
+                    $rows[] = $rowContent[$j*6 + $idx];
+                }
 
-            for ($i = 0; $i < $answerLenght - 1; $i++) {
-                $answer = (string)$answersContent[$i]->td[1]->p;
-                
-                $isCorrect = $answers[$i] === $correctAnswer;
-                $fraction = $isCorrect ? '100' : '0';
-    
-                $xmlString .= '<answer fraction="' . $fraction . '" format="html"><text><![CDATA[' . $answer . ']]></text><feedback format="html"><text/></feedback></answer>' . PHP_EOL;
+                $questionText = (string)$rows[0]->td[0]->p;
+                $questionContent = (string)$rows[0]->td[1]->p;
+
+                $answersContent = [];
+                foreach ($rows as $index => $value) {
+                    if ($index >= 1) {
+                        $answersContent[] = $value;
+                    }
+                }
+
+                $answerLenght = (int)count($answersContent);
+                $answerText = (string)$answersContent[count($answersContent) - 1]->td->p;
+
+                $xmlString .= '<question type="category"><category><text>$course$/</text></category></question><question type="multichoice">' . PHP_EOL;
+                $xmlString .= '<name><text>' . htmlspecialchars(trim($questionText)) . '</text></name>' . PHP_EOL;
+                $xmlString .= '<questiontext format="html"><text><![CDATA[' . $questionContent . ']]></text></questiontext>' . PHP_EOL;
+                $xmlString .= '<generalfeedback format="html"><text/></generalfeedback>' . PHP_EOL;
+                $xmlString .= '<defaultgrade>1.0000000</defaultgrade>' . PHP_EOL;
+                $xmlString .= '<penalty>0.3333333</penalty>' . PHP_EOL;
+                $xmlString .= '<hidden>0</hidden>' . PHP_EOL;
+                $xmlString .= '<idnumber/>' . PHP_EOL;
+                $xmlString .= '<single>true</single>' . PHP_EOL;
+                $xmlString .= '<shuffleanswers>true</shuffleanswers>' . PHP_EOL;
+                $xmlString .= '<answernumbering>ABCD</answernumbering>' . PHP_EOL;
+                $xmlString .= '<correctfeedback format="html"><text><![CDATA[<p>Câu trả lời của bạn đúng</p>]]></text></correctfeedback>' . PHP_EOL;
+                $xmlString .= '<partiallycorrectfeedback format="html"><text/></partiallycorrectfeedback>' . PHP_EOL;
+                $xmlString .= '<incorrectfeedback format="html"><text><![CDATA[<p>Câu trả lời của bạn sai.</p>]]></text></incorrectfeedback>' . PHP_EOL;
+        
+                $answers = ['A', 'B', 'C', 'D'];
+
+                $correctAnswer = (string)$answersContent[$answerLenght - 1]->td[1]->p;
+
+                for ($i = 0; $i < $answerLenght - 1; $i++) {
+                    $answer = (string)$answersContent[$i]->td[1]->p;
+                    
+                    $isCorrect = $answers[$i] === $correctAnswer;
+                    $fraction = $isCorrect ? '100' : '0';
+        
+                    $xmlString .= '<answer fraction="' . $fraction . '" format="html"><text><![CDATA[' . $answer . ']]></text><feedback format="html"><text/></feedback></answer>' . PHP_EOL;
+                }
+        
+                $xmlString .= '</question>' . PHP_EOL;
             }
-    
-            $xmlString .= '</question>' . PHP_EOL;
+
         }
 
         $xmlString .= '</quiz>';
-
+    
         return $xmlString;
     }
     /**
